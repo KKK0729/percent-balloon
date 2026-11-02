@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PERCENT BALLOON - パーセントバルーン</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Canvas for Balloons & Gondola -->
+    <div id="canvas-container">
+        <canvas id="balloon-canvas"></canvas>
+    </div>
+
+    <!-- Top Broadcast HUD -->
+    <header class="top-hud" id="top-hud">
+        <!-- Left: Remaining Questions Progress -->
+        <div class="hud-card question-counter-card">
+            <div class="hud-label">QUESTION</div>
+            <div class="question-number-row">
+                <span class="q-prefix">Q.</span>
+                <span id="current-q-num" class="q-big">1</span>
+                <span class="q-slash">/</span>
+                <span id="total-q-num" class="q-total">5</span>
+            </div>
+            <div class="remaining-q-badge">
+                残りあと <strong id="remaining-q-count">5</strong> 問
+            </div>
+            <div id="question-dots" class="question-dots"></div>
+        </div>
+
+        <!-- Center: Title / Optional Question Banner -->
+        <div class="center-banner-area">
+            <div class="show-logo-badge">
+                <span class="logo-star">★</span> PERCENT BALLOON <span class="logo-star">★</span>
+            </div>
+            <div id="question-text-banner" class="question-text-banner hidden">
+                <span id="display-respondent-badge" class="respondent-badge hidden"></span>
+                <span id="display-question-text" class="question-text-content"></span>
+            </div>
+        </div>
+
+        <!-- Right: Remaining Balloons Counter -->
+        <div class="hud-card balloon-counter-card" id="balloon-counter-card">
+            <div class="hud-label">REMAINING BALLOONS</div>
+            <div class="balloon-count-row">
+                <span class="balloon-icon">🎈</span>
+                <span id="remaining-balloons-num" class="balloon-big-num">100</span>
+            </div>
+            <div class="balloon-gauge-track">
+                <div id="balloon-gauge-bar" class="balloon-gauge-bar" style="width: 100%;"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Monitor Display (Answer vs Correct & Diff) -->
+    <main class="stage-area">
+        <div class="versus-monitors" id="versus-monitors">
+            <!-- Player Answer Flip Board -->
+            <div class="monitor-box player-monitor" id="player-monitor">
+                <div class="monitor-header">
+                    <span id="player-monitor-title">ANSWER（回答予想）</span>
+                </div>
+                <div class="monitor-body">
+                    <span id="display-answer-val" class="percent-value">--</span>
+                    <span class="percent-unit">%</span>
+                </div>
+            </div>
+
+            <!-- Diff / Status Badge in Center -->
+            <div class="diff-center-badge hidden" id="diff-center-badge">
+                <div class="diff-label">誤差</div>
+                <div class="diff-value-wrap">
+                    <span id="display-diff-val" class="diff-value">0</span>
+                    <span class="diff-unit">個</span>
+                </div>
+            </div>
+
+            <!-- Correct Answer Monitor -->
+            <div class="monitor-box correct-monitor" id="correct-monitor">
+                <div class="monitor-header">
+                    <span>CORRECT（正解）</span>
+                </div>
+                <div class="monitor-body">
+                    <span id="display-correct-val" class="percent-value">?</span>
+                    <span class="percent-unit">%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Mini Ticker (Bottom Left) -->
+        <div class="history-ticker" id="history-ticker">
+            <div class="history-title">📋 履歴</div>
+            <div id="history-list" class="history-list">
+                <span class="history-empty">まだ記録がありません</span>
+            </div>
+        </div>
+    </main>
+
+    <!-- Dramatic Cut-in Overlays (PERFECT / GAME CLEAR / GAME OVER) -->
+    <div id="cutin-perfect" class="cutin-overlay hidden">
+        <div class="cutin-banner perfect-banner">
+            <div class="cutin-sub">誤差 0%！ピタリ賞！！</div>
+            <div class="cutin-main">PERFECT!!</div>
+            <div class="cutin-bonus" id="perfect-bonus-text">ボーナス風船 +10個！</div>
+        </div>
+    </div>
+
+    <div id="result-modal" class="result-overlay hidden">
+        <div class="result-card" id="result-card">
+            <div class="result-badge" id="result-badge">FINAL RESULT</div>
+            <h1 class="result-title" id="result-title">GAME CLEAR!!</h1>
+            <p class="result-subtitle" id="result-subtitle">見事、風船を残して全問突破しました！</p>
+
+            <div class="result-stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">最終残りバルーン</span>
+                    <span class="stat-value"><strong id="final-balloons-stat">42</strong> 個</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">クリア問題数</span>
+                    <span class="stat-value"><strong id="final-questions-stat">5 / 5</strong> 問</span>
+                </div>
+            </div>
+
+            <div class="result-log-section">
+                <h3>各問の振り返り</h3>
+                <div id="result-log-table" class="result-log-table"></div>
+            </div>
+
+            <div class="result-actions">
+                <button id="btn-result-undo" class="btn btn-secondary">↩ 直前の問題に戻る (Undo)</button>
+                <button id="btn-play-again" class="btn btn-primary btn-large">🔄 タイトル・設定へ戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initial Setup Modal (Start Screen) -->
+    <div id="setup-modal" class="setup-overlay">
+        <div class="setup-card">
+            <div class="setup-logo">
+                <span class="balloon-emoji">🎈</span>
+                <h1>パーセントバルーン</h1>
+                <p class="setup-tagline">世の中の「％」を予想して風船を守り抜け！</p>
+            </div>
+
+            <div class="setup-form">
+                <div class="setup-row">
+                    <label for="setup-total-questions">
+                        <span class="label-title">🎯 問題数</span>
+                        <span class="label-desc">この問題数を終えた時点で風船が1個でも残っていればGAME CLEAR</span>
+                    </label>
+                    <div class="number-stepper">
+                        <button type="button" class="stepper-btn" data-target="setup-total-questions" data-step="-1">−</button>
+                        <input type="number" id="setup-total-questions" value="5" min="1" max="30">
+                        <button type="button" class="stepper-btn" data-target="setup-total-questions" data-step="1">＋</button>
+                    </div>
+                </div>
+
+                <div class="setup-row">
+                    <label for="setup-initial-balloons">
+                        <span class="label-title">🎈 初期バルーン数</span>
+                        <span class="label-desc">開始時の風船の数（定番は100個）</span>
+                    </label>
+                    <div class="number-stepper">
+                        <button type="button" class="stepper-btn" data-target="setup-initial-balloons" data-step="-10">−10</button>
+                        <input type="number" id="setup-initial-balloons" value="100" min="10" max="200">
+                        <button type="button" class="stepper-btn" data-target="setup-initial-balloons" data-step="10">＋10</button>
+                    </div>
+                </div>
+
+                <div class="setup-row">
+                    <label for="setup-perfect-bonus">
+                        <span class="label-title">✨ ピタリ賞ボーナス</span>
+                        <span class="label-desc">誤差0%（ピタリ正解）のときに追加される風船数（0でなし）</span>
+                    </label>
+                    <div class="number-stepper">
+                        <button type="button" class="stepper-btn" data-target="setup-perfect-bonus" data-step="-5">−5</button>
+                        <input type="number" id="setup-perfect-bonus" value="10" min="0" max="50">
+                        <button type="button" class="stepper-btn" data-target="setup-perfect-bonus" data-step="5">＋5</button>
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-start-game" class="btn btn-start-game">
+                🚀 ゲームスタート！
+            </button>
+        </div>
+    </div>
+
+    <!-- Operator Control Dock (Bottom) -->
+    <section class="control-dock" id="control-dock">
+        <div class="dock-toolbar">
+            <div class="dock-status-badge" id="dock-phase-indicator">STEP 1: 回答を入力してください</div>
+            <div class="dock-tools-right">
+                <label class="blind-toggle" title="画面共有中に正解入力欄を伏せ字（•••）にします">
+                    <input type="checkbox" id="chk-blind-correct">
+                    <span>🙈 正解を隠して入力</span>
+                </label>
+                <button id="btn-run-test" class="btn-tool" title="全機能の自動セルフテストを実行します">🧪 自動テスト検証</button>
+                <button id="btn-undo" class="btn-tool" disabled title="1つ前の状態に戻す">↩ やり直し(Undo)</button>
+                <button id="btn-mute" class="btn-tool" title="効果音のON/OFF">🔊 音ON</button>
+                <button id="btn-open-setup" class="btn-tool" title="初期設定画面を開く">⚙️ 設定リセット</button>
+                <button id="btn-toggle-dock" class="btn-tool" title="パネルを最小化/展開 (ショートカット: Hキー)">🔽 パネルを隠す</button>
+            </div>
+        </div>
+
+        <div class="dock-body" id="dock-body">
+            <!-- Optional Info Inputs -->
+            <div class="dock-group optional-group">
+                <div class="input-field">
+                    <label for="input-respondent">👤 回答者名 <small>(任意)</small></label>
+                    <input type="text" id="input-respondent" placeholder="例: 1枠 田中さん" autocomplete="off">
+                </div>
+                <div class="input-field question-field">
+                    <label for="input-question-text">📝 問題メモ・タイトル <small>(任意・空欄でもOK)</small></label>
+                    <input type="text" id="input-question-text" placeholder="例: スマホを1日3時間以上使う人の割合は？" autocomplete="off">
+                </div>
+            </div>
+
+            <!-- Answer Input & Lock -->
+            <div class="dock-group action-group" id="group-step-answer">
+                <div class="input-field number-field">
+                    <label for="input-answer">🎤 回答者の答え (%)</label>
+                    <div class="percent-input-wrap">
+                        <input type="number" id="input-answer" min="0" max="100" placeholder="0〜100">
+                        <span>%</span>
+                    </div>
+                </div>
+                <button id="btn-lock-answer" class="btn btn-action btn-blue">
+                    ① 回答を表示
+                </button>
+            </div>
+
+            <!-- Correct Answer Input & Reveal -->
+            <div class="dock-group action-group" id="group-step-correct">
+                <div class="input-field number-field">
+                    <label for="input-correct">🎯 正解の数値 (%)</label>
+                    <div class="percent-input-wrap">
+                        <input type="number" id="input-correct" min="0" max="100" placeholder="0〜100">
+                        <span>%</span>
+                    </div>
+                </div>
+                <button id="btn-reveal-correct" class="btn btn-action btn-orange" disabled>
+                    ② 正解を発表！
+                </button>
+            </div>
+
+            <!-- Pop / Next Step Trigger -->
+            <div class="dock-group action-group" id="group-step-pop">
+                <button id="btn-pop-balloons" class="btn btn-action btn-red" disabled>
+                    ③ バルーン計測！ 💥
+                </button>
+                <button id="btn-next-question" class="btn btn-action btn-green hidden">
+                    ➡ 次の問題へ進む
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Floating Restore Button when Dock is minimized -->
+    <button id="btn-restore-dock" class="btn-restore-dock hidden" title="操作パネルを表示 (Hキー)">
+        🔼 操作パネルを表示
+    </button>
+
+    <script src="sound-engine.js"></script>
+    <script src="balloon-engine.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
