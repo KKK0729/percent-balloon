@@ -36,6 +36,10 @@ class BalloonEngine {
         this.initClouds();
         this.resize();
         window.addEventListener('resize', () => this.resize());
+        if (typeof ResizeObserver !== 'undefined' && this.canvas.parentElement) {
+            const ro = new ResizeObserver(() => this.resize());
+            ro.observe(this.canvas.parentElement);
+        }
         this.animate();
     }
 
@@ -108,9 +112,10 @@ class BalloonEngine {
         const count = this.balloons.length;
         if (count === 0) return;
 
-        const clusterRadiusX = Math.min(this.width * 0.36, 310);
-        const clusterRadiusY = Math.min(this.height * 0.27, 210);
-        const baseBalloonRadius = count > 100 ? 19 : count > 60 ? 23 : 27;
+        const scaleFactor = Math.min(1, Math.max(0.65, this.height / 740));
+        const clusterRadiusX = Math.min(this.width * 0.34, 300 * scaleFactor);
+        const clusterRadiusY = Math.min(this.height * 0.25, 195 * scaleFactor);
+        const baseBalloonRadius = (count > 100 ? 19 : count > 60 ? 23 : 27) * scaleFactor;
 
         // Golden angle spiral distribution inside an oval bouquet
         const goldenAngle = Math.PI * (3 - Math.sqrt(5));
@@ -123,7 +128,7 @@ class BalloonEngine {
             b.relX = Math.cos(theta) * r * clusterRadiusX;
             // Shift upper half slightly wider like a real balloon bunch
             const verticalBias = Math.sin(theta) * r * clusterRadiusY;
-            b.relY = verticalBias - (1 - Math.abs(Math.cos(theta)) * 0.25) * 18;
+            b.relY = verticalBias - (1 - Math.abs(Math.cos(theta)) * 0.25) * (18 * scaleFactor);
             b.radius = baseBalloonRadius * (0.92 + (i % 5) * 0.03);
         }
     }
@@ -131,13 +136,14 @@ class BalloonEngine {
     getGondolaAnchor() {
         const remaining = this.balloons.length;
         const ratio = Math.min(remaining / Math.max(this.maxBalloons, 1), 1.2);
+        const scaleFactor = Math.min(1, Math.max(0.65, this.height / 740));
         // As balloons pop, gondola sinks slightly to build tension
-        const sinkOffset = (1 - ratio) * Math.min(this.height * 0.14, 95);
-        const bobbing = Math.sin(this.time * 2.1) * 6;
+        const sinkOffset = (1 - ratio) * Math.min(this.height * 0.12, 80 * scaleFactor);
+        const bobbing = Math.sin(this.time * 2.1) * 5;
 
         const anchorX = this.width * 0.5;
-        const anchorY = this.height * 0.68 + sinkOffset + bobbing + this.gondolaOffsetY;
-        const clusterCenterY = anchorY - Math.min(this.height * 0.34, 245);
+        const anchorY = this.height * 0.72 + sinkOffset + bobbing + this.gondolaOffsetY;
+        const clusterCenterY = anchorY - Math.min(this.height * 0.34, 230 * scaleFactor);
 
         return { anchorX, anchorY, clusterCenterY };
     }

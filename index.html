@@ -6,99 +6,108 @@
     <title>PERCENT BALLOON - パーセントバルーン</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;800;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Exo+2:wght@800;900&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Background Canvas for Balloons & Gondola -->
-    <div id="canvas-container">
-        <canvas id="balloon-canvas"></canvas>
+    <!-- Main Projection Viewport (Automatically resizes above bottom dock when dock is open) -->
+    <div id="projection-viewport" class="projection-viewport">
+        <!-- Background Canvas for Balloons & Gondola -->
+        <div id="canvas-container">
+            <canvas id="balloon-canvas"></canvas>
+        </div>
+
+        <!-- Top Broadcast HUD -->
+        <header class="top-hud" id="top-hud">
+            <!-- Left: Remaining Questions Progress -->
+            <div class="hud-card question-counter-card">
+                <div class="hud-label">QUESTION</div>
+                <div class="question-number-row">
+                    <span class="q-prefix">Q.</span>
+                    <span id="current-q-num" class="q-big">1</span>
+                    <span class="q-slash">/</span>
+                    <span id="total-q-num" class="q-total">5</span>
+                </div>
+                <div class="remaining-q-badge">
+                    残りあと <strong id="remaining-q-count">5</strong> 問
+                </div>
+                <div id="question-dots" class="question-dots"></div>
+            </div>
+
+            <!-- Center: Title & Large TV Telop Question Banner -->
+            <div class="center-banner-area">
+                <div class="show-logo-badge">
+                    <span class="logo-star">★</span> PERCENT BALLOON <span class="logo-star">★</span>
+                </div>
+                <div id="question-text-banner" class="question-text-banner hidden">
+                    <div class="question-banner-header">
+                        <span class="q-telop-tag" id="q-telop-tag">QUESTION 1</span>
+                        <span id="display-respondent-badge" class="respondent-badge hidden"></span>
+                    </div>
+                    <div id="display-question-text" class="question-text-content"></div>
+                    <div id="display-question-source" class="question-source-caption hidden"></div>
+                </div>
+            </div>
+
+            <!-- Right: Remaining Balloons Counter -->
+            <div class="hud-card balloon-counter-card" id="balloon-counter-card">
+                <div class="hud-label">REMAINING BALLOONS</div>
+                <div class="balloon-count-row">
+                    <span class="balloon-icon">🎈</span>
+                    <span id="remaining-balloons-num" class="balloon-big-num">100</span>
+                </div>
+                <div class="balloon-gauge-track">
+                    <div id="balloon-gauge-bar" class="balloon-gauge-bar" style="width: 100%;"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Monitor Display (Pinned to fixed coordinates so it never shifts when question text changes) -->
+        <main class="stage-area">
+            <div class="versus-monitors" id="versus-monitors">
+                <!-- Player Answer Flip Board -->
+                <div class="monitor-box player-monitor" id="player-monitor">
+                    <div class="monitor-header">
+                        <span id="player-monitor-title">ANSWER（回答予想）</span>
+                    </div>
+                    <div class="monitor-body">
+                        <span id="display-answer-val" class="percent-value">--</span>
+                        <span class="percent-unit">%</span>
+                    </div>
+                </div>
+
+                <!-- Diff / Status Badge in Center -->
+                <div class="diff-center-badge hidden" id="diff-center-badge">
+                    <div class="diff-label">誤差</div>
+                    <div class="diff-value-wrap">
+                        <span id="display-diff-val" class="diff-value">0</span>
+                        <span class="diff-unit">個</span>
+                    </div>
+                </div>
+
+                <!-- Correct Answer Monitor -->
+                <div class="monitor-box correct-monitor" id="correct-monitor">
+                    <div class="monitor-header">
+                        <span>CORRECT（正解）</span>
+                    </div>
+                    <div class="monitor-body">
+                        <span id="display-correct-val" class="percent-value">?</span>
+                        <span class="percent-unit">%</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Explanation Popup Card (Auto-shown on answer reveal, toggleable via Control Panel) -->
+        <div id="explanation-panel" class="explanation-panel hidden">
+            <div class="explanation-header">
+                <span class="explanation-badge">💡 解説・ポイント</span>
+                <button type="button" id="btn-close-explanation" class="btn-close-explanation" title="解説を一時的に閉じる（コントロールパネルから再表示できます）">✕ 閉じる</button>
+            </div>
+            <div id="display-explanation-text" class="explanation-body"></div>
+            <div id="display-explanation-source" class="explanation-source"></div>
+        </div>
     </div>
-
-    <!-- Top Broadcast HUD -->
-    <header class="top-hud" id="top-hud">
-        <!-- Left: Remaining Questions Progress -->
-        <div class="hud-card question-counter-card">
-            <div class="hud-label">QUESTION</div>
-            <div class="question-number-row">
-                <span class="q-prefix">Q.</span>
-                <span id="current-q-num" class="q-big">1</span>
-                <span class="q-slash">/</span>
-                <span id="total-q-num" class="q-total">5</span>
-            </div>
-            <div class="remaining-q-badge">
-                残りあと <strong id="remaining-q-count">5</strong> 問
-            </div>
-            <div id="question-dots" class="question-dots"></div>
-        </div>
-
-        <!-- Center: Title / Optional Question Banner -->
-        <div class="center-banner-area">
-            <div class="show-logo-badge">
-                <span class="logo-star">★</span> PERCENT BALLOON <span class="logo-star">★</span>
-            </div>
-            <div id="question-text-banner" class="question-text-banner hidden">
-                <span id="display-respondent-badge" class="respondent-badge hidden"></span>
-                <span id="display-question-text" class="question-text-content"></span>
-            </div>
-        </div>
-
-        <!-- Right: Remaining Balloons Counter -->
-        <div class="hud-card balloon-counter-card" id="balloon-counter-card">
-            <div class="hud-label">REMAINING BALLOONS</div>
-            <div class="balloon-count-row">
-                <span class="balloon-icon">🎈</span>
-                <span id="remaining-balloons-num" class="balloon-big-num">100</span>
-            </div>
-            <div class="balloon-gauge-track">
-                <div id="balloon-gauge-bar" class="balloon-gauge-bar" style="width: 100%;"></div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Monitor Display (Answer vs Correct & Diff) -->
-    <main class="stage-area">
-        <div class="versus-monitors" id="versus-monitors">
-            <!-- Player Answer Flip Board -->
-            <div class="monitor-box player-monitor" id="player-monitor">
-                <div class="monitor-header">
-                    <span id="player-monitor-title">ANSWER（回答予想）</span>
-                </div>
-                <div class="monitor-body">
-                    <span id="display-answer-val" class="percent-value">--</span>
-                    <span class="percent-unit">%</span>
-                </div>
-            </div>
-
-            <!-- Diff / Status Badge in Center -->
-            <div class="diff-center-badge hidden" id="diff-center-badge">
-                <div class="diff-label">誤差</div>
-                <div class="diff-value-wrap">
-                    <span id="display-diff-val" class="diff-value">0</span>
-                    <span class="diff-unit">個</span>
-                </div>
-            </div>
-
-            <!-- Correct Answer Monitor -->
-            <div class="monitor-box correct-monitor" id="correct-monitor">
-                <div class="monitor-header">
-                    <span>CORRECT（正解）</span>
-                </div>
-                <div class="monitor-body">
-                    <span id="display-correct-val" class="percent-value">?</span>
-                    <span class="percent-unit">%</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- History Mini Ticker (Bottom Left) -->
-        <div class="history-ticker" id="history-ticker">
-            <div class="history-title">📋 履歴</div>
-            <div id="history-list" class="history-list">
-                <span class="history-empty">まだ記録がありません</span>
-            </div>
-        </div>
-    </main>
 
     <!-- Dramatic Cut-in Overlays (PERFECT / GAME CLEAR / GAME OVER) -->
     <div id="cutin-perfect" class="cutin-overlay hidden">
@@ -111,7 +120,10 @@
 
     <div id="result-modal" class="result-overlay hidden">
         <div class="result-card" id="result-card">
-            <div class="result-badge" id="result-badge">FINAL RESULT</div>
+            <div class="result-card-top-bar">
+                <div class="result-badge" id="result-badge">FINAL RESULT</div>
+                <button type="button" id="btn-close-result" class="btn-close-explanation" title="結果画面を一時的に閉じて、最後の問題や解説を確認します">✕ 閉じて問題・解説を見る</button>
+            </div>
             <h1 class="result-title" id="result-title">GAME CLEAR!!</h1>
             <p class="result-subtitle" id="result-subtitle">見事、風船を残して全問突破しました！</p>
 
@@ -133,7 +145,7 @@
 
             <div class="result-actions">
                 <button id="btn-result-undo" class="btn btn-secondary">↩ 直前の問題に戻る (Undo)</button>
-                <button id="btn-play-again" class="btn btn-primary btn-large">🔄 タイトル・設定へ戻る</button>
+                <button id="btn-play-again" class="btn btn-primary btn-large">🏠 タイトル・設定へ戻る</button>
             </div>
         </div>
     </div>
@@ -148,14 +160,52 @@
             </div>
 
             <div class="setup-form">
-                <div class="setup-row">
+                <!-- Question Source / CSV Selection Box -->
+                <div class="setup-section-box">
+                    <div class="section-header-row">
+                        <span class="label-title">📂 問題セットの選択（難易度別3セット ／ CSV読み込み ／ 自由入力）</span>
+                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                            <a href="shuwa-easy.csv" download="shuwa-easy.csv" class="csv-sample-link">⬇ 易CSV</a>
+                            <a href="shuwa-normal.csv" download="shuwa-normal.csv" class="csv-sample-link">⬇ 普通CSV</a>
+                            <a href="shuwa-hard.csv" download="shuwa-hard.csv" class="csv-sample-link">⬇ 難CSV</a>
+                        </div>
+                    </div>
+                    <p class="label-desc" style="margin-bottom: 10px;">
+                        難易度別の手話クイズセット（各10問・出典＆解説付き）または自作CSV（<code>問題文, 正解, 出典, 解説</code>）を選べます。
+                    </p>
+
+                    <div class="csv-controls-row">
+                        <select id="setup-preset-select" class="preset-select">
+                            <option value="shuwa_easy">🟢 手話クイズ【易・初級】（全10問・初心者向け）</option>
+                            <option value="shuwa_normal">🟡 手話クイズ【普通・中級】（全10問・社会制度＆条例）</option>
+                            <option value="shuwa_hard">🔴 手話クイズ【難・上級】（全10問・専門統計＆実態）</option>
+                            <option value="preset_general">🧪 テスト用①（一般常識：日常・ライフスタイル編・全5問）</option>
+                            <option value="preset_trivia">🧪 テスト用②（一般常識：おもしろ雑学・アンケート編・全5問）</option>
+                            <option value="manual">✍️ ファイルを選択しない（問題数を指定して手動進行）</option>
+                            <option value="custom_csv">📄 パソコン内のCSVファイルを選択する...</option>
+                        </select>
+
+                        <label for="setup-csv-file" class="btn btn-csv-upload" id="lbl-csv-upload">
+                            📁 CSVファイルを選択
+                        </label>
+                        <input type="file" id="setup-csv-file" accept=".csv,.txt" class="hidden">
+                    </div>
+
+                    <div id="csv-loaded-info" class="csv-loaded-info hidden">
+                        <span id="csv-loaded-status">✅ 5問のデータを読み込みました</span>
+                        <button type="button" id="btn-clear-csv" class="btn-clear-csv">✕ クリア</button>
+                    </div>
+                </div>
+
+                <!-- Question Count Row (Automatically updated if CSV loaded) -->
+                <div class="setup-row" id="setup-question-count-row">
                     <label for="setup-total-questions">
                         <span class="label-title">🎯 問題数</span>
-                        <span class="label-desc">この問題数を終えた時点で風船が1個でも残っていればGAME CLEAR</span>
+                        <span class="label-desc" id="setup-q-desc">この問題数を終えた時点で風船が1個でも残っていればGAME CLEAR</span>
                     </label>
                     <div class="number-stepper">
                         <button type="button" class="stepper-btn" data-target="setup-total-questions" data-step="-1">−</button>
-                        <input type="number" id="setup-total-questions" value="5" min="1" max="30">
+                        <input type="number" id="setup-total-questions" value="5" min="1" max="50">
                         <button type="button" class="stepper-btn" data-target="setup-total-questions" data-step="1">＋</button>
                     </div>
                 </div>
@@ -179,10 +229,16 @@
                     </label>
                     <div class="number-stepper">
                         <button type="button" class="stepper-btn" data-target="setup-perfect-bonus" data-step="-5">−5</button>
-                        <input type="number" id="setup-perfect-bonus" value="10" min="0" max="50">
+                        <input type="number" id="setup-perfect-bonus" value="0" min="0" max="50">
                         <button type="button" class="stepper-btn" data-target="setup-perfect-bonus" data-step="5">＋5</button>
                     </div>
                 </div>
+
+                <!-- Popup Controller Mode Option -->
+                <label class="popup-mode-check">
+                    <input type="checkbox" id="chk-open-popup-on-start" checked>
+                    <span>🪟 ゲーム開始時に「司会者用コントローラー」を別ウィンドウ（ポップアップ）で開き、投影画面から操作パネルを隠す</span>
+                </label>
             </div>
 
             <button id="btn-start-game" class="btn btn-start-game">
@@ -191,11 +247,18 @@
         </div>
     </div>
 
-    <!-- Operator Control Dock (Bottom) -->
+    <!-- Operator Control Dock (Bottom - Automatically hidden when Popup Controller is used) -->
     <section class="control-dock" id="control-dock">
         <div class="dock-toolbar">
             <div class="dock-status-badge" id="dock-phase-indicator">STEP 1: 回答を入力してください</div>
             <div class="dock-tools-right">
+                <button id="btn-open-popup" class="btn-tool btn-tool-highlight" title="操作パネルを別ウィンドウで開き、この画面を投影専用にします">
+                    🪟 操作パネルを別ウィンドウで開く
+                </button>
+                <label class="blind-toggle" title="正解発表の直後に自動で差分の風船を割ります">
+                    <input type="checkbox" id="chk-auto-pop" checked>
+                    <span>💥 正解発表後に自動で割る</span>
+                </label>
                 <label class="blind-toggle" title="画面共有中に正解入力欄を伏せ字（•••）にします">
                     <input type="checkbox" id="chk-blind-correct">
                     <span>🙈 正解を隠して入力</span>
@@ -203,7 +266,7 @@
                 <button id="btn-run-test" class="btn-tool" title="全機能の自動セルフテストを実行します">🧪 自動テスト検証</button>
                 <button id="btn-undo" class="btn-tool" disabled title="1つ前の状態に戻す">↩ やり直し(Undo)</button>
                 <button id="btn-mute" class="btn-tool" title="効果音のON/OFF">🔊 音ON</button>
-                <button id="btn-open-setup" class="btn-tool" title="初期設定画面を開く">⚙️ 設定リセット</button>
+                <button id="btn-open-setup" class="btn-tool btn-tool-home" title="問題の途中でもタイトル（初期設定）画面へ戻ります">🏠 タイトルへ戻る</button>
                 <button id="btn-toggle-dock" class="btn-tool" title="パネルを最小化/展開 (ショートカット: Hキー)">🔽 パネルを隠す</button>
             </div>
         </div>
@@ -216,7 +279,7 @@
                     <input type="text" id="input-respondent" placeholder="例: 1枠 田中さん" autocomplete="off">
                 </div>
                 <div class="input-field question-field">
-                    <label for="input-question-text">📝 問題メモ・タイトル <small>(任意・空欄でもOK)</small></label>
+                    <label for="input-question-text">📝 問題文 <small>(CSV選択時は自動表示)</small></label>
                     <input type="text" id="input-question-text" placeholder="例: スマホを1日3時間以上使う人の割合は？" autocomplete="off">
                 </div>
             </div>
@@ -226,7 +289,7 @@
                 <div class="input-field number-field">
                     <label for="input-answer">🎤 回答者の答え (%)</label>
                     <div class="percent-input-wrap">
-                        <input type="number" id="input-answer" min="0" max="100" placeholder="0〜100">
+                        <input type="text" inputmode="numeric" id="input-answer" placeholder="0〜100" autocomplete="off">
                         <span>%</span>
                     </div>
                 </div>
@@ -240,7 +303,7 @@
                 <div class="input-field number-field">
                     <label for="input-correct">🎯 正解の数値 (%)</label>
                     <div class="percent-input-wrap">
-                        <input type="number" id="input-correct" min="0" max="100" placeholder="0〜100">
+                        <input type="password" inputmode="numeric" id="input-correct" placeholder="0〜100" autocomplete="off">
                         <span>%</span>
                     </div>
                 </div>
@@ -254,6 +317,12 @@
                 <button id="btn-pop-balloons" class="btn btn-action btn-red" disabled>
                     ③ バルーン計測！ 💥
                 </button>
+                <button id="btn-toggle-explanation" class="btn btn-action btn-purple hidden" title="投影画面の解説カードを表示/非表示にします">
+                    💡 解説を見る/隠す
+                </button>
+                <button id="btn-toggle-result" class="btn btn-action btn-orange hidden" title="GAME CLEAR / GAME OVER 結果画面を表示/非表示にします">
+                    🏆 結果画面を表示/隠す
+                </button>
                 <button id="btn-next-question" class="btn btn-action btn-green hidden">
                     ➡ 次の問題へ進む
                 </button>
@@ -261,10 +330,18 @@
         </div>
     </section>
 
-    <!-- Floating Restore Button when Dock is minimized -->
-    <button id="btn-restore-dock" class="btn-restore-dock hidden" title="操作パネルを表示 (Hキー)">
-        🔼 操作パネルを表示
-    </button>
+    <!-- Subtle Floating Corner Button when Dock is minimized (Semi-transparent on hover) -->
+    <div id="floating-corner-tools" class="floating-corner-tools hidden">
+        <button id="btn-corner-title" class="btn-corner-mini" title="問題の途中でもタイトル（初期設定）画面へ戻ります">
+            🏠 タイトルへ戻る
+        </button>
+        <button id="btn-restore-popup" class="btn-corner-mini" title="別ウィンドウの司会者コントローラーを開く">
+            🪟 コントローラーを開く
+        </button>
+        <button id="btn-restore-dock" class="btn-corner-mini" title="画面下部の操作パネルを表示 (Hキー)">
+            🔼 下部パネル表示
+        </button>
+    </div>
 
     <script src="sound-engine.js"></script>
     <script src="balloon-engine.js"></script>

@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎛️ 司会者コントローラー - パーセントバルーン</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@700&family=Exo+2:wght@800;900&family=M+PLUS+Rounded+1c:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-main: 'M PLUS Rounded 1c', 'Hiragino Maru Gothic ProN', 'Yu Gothic', sans-serif;
+            --font-digital: 'Chakra Petch', 'Exo 2', 'M PLUS Rounded 1c', sans-serif;
+            --gold: #FFD700;
+            --bg-dark: #0A162E;
+            --card-bg: #13254A;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-dark);
+            color: #FFFFFF;
+            padding: 16px;
+            line-height: 1.4;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .ctrl-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(90deg, #163063, #0F2042);
+            border: 2px solid var(--gold);
+            border-radius: 14px;
+            padding: 10px 16px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .ctrl-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--gold);
+        }
+
+        .conn-badge {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            background: rgba(0, 230, 118, 0.2);
+            border: 1px solid #00E676;
+            color: #69F0AE;
+        }
+
+        .live-stats {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .stat-pill {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: 800;
+        }
+
+        .stat-pill strong {
+            font-family: var(--font-digital);
+            font-size: 18px;
+            color: var(--gold);
+            margin-left: 4px;
+        }
+
+        .phase-banner {
+            background: rgba(77, 208, 225, 0.15);
+            border-left: 5px solid #4DD0E1;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 900;
+            color: #E0F7FA;
+            margin-bottom: 14px;
+        }
+
+        .ctrl-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        @media (max-width: 680px) {
+            .ctrl-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .ctrl-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .ctrl-card.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--gold);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .field-row {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .field label {
+            font-size: 12px;
+            font-weight: 800;
+            color: #B0BEC5;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            background: rgba(0, 0, 0, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #FFFFFF;
+            font-family: var(--font-main);
+            font-size: 15px;
+            font-weight: 800;
+            outline: none;
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--gold);
+        }
+
+        .big-num-input {
+            font-family: var(--font-digital) !important;
+            font-size: 24px !important;
+            text-align: center;
+            color: var(--gold) !important;
+        }
+
+        .host-secret-box {
+            background: rgba(255, 215, 0, 0.12);
+            border: 1.5px dashed var(--gold);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .host-secret-box strong {
+            font-family: var(--font-digital);
+            font-size: 20px;
+            color: var(--gold);
+        }
+
+        .btn {
+            border: none;
+            border-radius: 10px;
+            padding: 11px 16px;
+            font-family: var(--font-main);
+            font-size: 15px;
+            font-weight: 900;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: transform 0.12s ease, filter 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .btn:disabled {
+            opacity: 0.38;
+            cursor: not-allowed;
+            filter: grayscale(0.4);
+        }
+
+        .btn-blue {
+            background: linear-gradient(180deg, #0088FF 0%, #0055CC 100%);
+            box-shadow: 0 4px 0 #003380;
+        }
+
+        .btn-orange {
+            background: linear-gradient(180deg, #FF9900 0%, #E65C00 100%);
+            box-shadow: 0 4px 0 #803300;
+        }
+
+        .btn-red {
+            background: linear-gradient(180deg, #FF2A55 0%, #C80028 100%);
+            box-shadow: 0 4px 0 #730017;
+        }
+
+        .btn-green {
+            background: linear-gradient(180deg, #00E676 0%, #00A854 100%);
+            box-shadow: 0 4px 0 #006030;
+        }
+
+        .btn-purple {
+            background: linear-gradient(180deg, #AB47BC 0%, #7B1FA2 100%);
+            box-shadow: 0 4px 0 #4A148C;
+        }
+
+        .btn-sub {
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 7px 12px;
+            font-size: 12px;
+            border-radius: 8px;
+        }
+
+        .step-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .utility-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            flex-wrap: wrap;
+        }
+
+        .question-list-preview {
+            max-height: 130px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 8px;
+            padding: 6px;
+            font-size: 12px;
+        }
+
+        .q-item {
+            padding: 5px 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .q-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .q-item.current {
+            background: rgba(255, 215, 0, 0.22);
+            border-left: 3px solid var(--gold);
+            font-weight: 900;
+        }
+    </style>
+</head>
+<body>
+    <header class="ctrl-header">
+        <div class="ctrl-title">
+            <span>🎛️ 司会者コントローラー</span>
+            <span class="conn-badge" id="conn-badge">● 投影画面と連動中</span>
+        </div>
+        <div class="live-stats">
+            <div class="stat-pill">問題 <strong id="ctrl-q-num">1 / 5</strong></div>
+            <div class="stat-pill">残り風船 <strong id="ctrl-balloons">100</strong> 🎈</div>
+            <button id="ctrl-btn-home-top" class="btn btn-sub" style="border-color:#FFD700; color:#FFF59D;" title="問題の途中でもタイトル画面に戻ります">🏠 タイトルへ戻る</button>
+        </div>
+    </header>
+
+    <div class="phase-banner" id="ctrl-phase-banner">
+        STEP 1: 問題文を確認し、回答者の予想(%)を入力してください
+    </div>
+
+    <div class="ctrl-grid">
+        <!-- Question & Respondent Card -->
+        <div class="ctrl-card full-width">
+            <div class="card-title">
+                <span>📝 現在の問題・回答者（投影画面にリアルタイム反映）</span>
+                <button id="ctrl-btn-toggle-q" class="btn btn-sub">👁️ 問題文の表示/非表示</button>
+            </div>
+            <div class="field-row">
+                <div class="field" style="max-width: 200px;">
+                    <label for="ctrl-respondent">👤 回答者名 (任意)</label>
+                    <input type="text" id="ctrl-respondent" placeholder="例: 1枠 田中さん" autocomplete="off">
+                </div>
+                <div class="field">
+                    <label for="ctrl-question-text">📢 投影画面に表示する問題文</label>
+                    <input type="text" id="ctrl-question-text" placeholder="問題文を入力（CSV読み込み時は自動セットされます）" autocomplete="off">
+                </div>
+            </div>
+
+            <!-- Question List Preview (when CSV/Preset loaded) -->
+            <div id="ctrl-q-list-wrap" class="hidden">
+                <div style="font-size:11px; color:#B0BEC5; margin-bottom:4px;">📚 読み込み済みの問題リスト（クリックで直接選択も可能）：</div>
+                <div id="ctrl-q-list" class="question-list-preview"></div>
+            </div>
+        </div>
+
+        <!-- Step 1: Respondent Answer -->
+        <div class="ctrl-card">
+            <div class="card-title">
+                <span>🎤 STEP 1: 回答者の予想</span>
+            </div>
+            <div class="field">
+                <label for="ctrl-answer">予想パーセント (0〜100%)</label>
+                <input type="text" inputmode="numeric" id="ctrl-answer" class="big-num-input" placeholder="0〜100" autocomplete="off">
+            </div>
+            <button id="ctrl-btn-lock-answer" class="btn btn-blue">
+                ① 回答を投影画面に表示 (Enter)
+            </button>
+        </div>
+
+        <!-- Step 2 & 3: Correct Answer & Pop -->
+        <div class="ctrl-card">
+            <div class="card-title">
+                <span>🎯 STEP 2 & 3: 正解発表・バルーン計測</span>
+                <label style="font-size:11px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; color:#FFF59D;">
+                    <input type="checkbox" id="ctrl-chk-auto-pop" checked>
+                    <span>正解発表後に自動で風船を割る</span>
+                </label>
+            </div>
+            <div class="host-secret-box" id="host-secret-box">
+                <span>📋 設定されている正解：</span>
+                <strong id="host-secret-val">未設定（手入力）</strong>
+            </div>
+            <div class="field">
+                <label for="ctrl-correct">正解パーセント (0〜100% ※手入力・変更も可)</label>
+                <input type="text" inputmode="numeric" id="ctrl-correct" class="big-num-input" placeholder="0〜100" autocomplete="off">
+            </div>
+            <div class="step-actions">
+                <button id="ctrl-btn-reveal" class="btn btn-orange" disabled>
+                    ② 正解を発表！ 💥
+                </button>
+                <button id="ctrl-btn-pop" class="btn btn-red" disabled>
+                    ③ 手動で割る
+                </button>
+            </div>
+            <button id="ctrl-btn-explanation" class="btn btn-purple hidden" style="width: 100%; margin-top: 4px;">
+                💡 解説を見る/隠す
+            </button>
+            <button id="ctrl-btn-result" class="btn btn-orange hidden" style="width: 100%; margin-top: 4px;">
+                🏆 結果画面を表示/隠す
+            </button>
+            <button id="ctrl-btn-next" class="btn btn-green hidden" style="width: 100%; margin-top: 4px;">
+                ➡ 次の問題へ進む
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Utility Toolbar -->
+    <div class="utility-bar">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="ctrl-btn-undo" class="btn btn-sub" disabled>↩ 1つ前に戻す (Undo)</button>
+            <button id="ctrl-btn-mute" class="btn btn-sub">🔊 効果音 ON</button>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button id="ctrl-btn-setup" class="btn btn-sub" style="border-color:#FFD700; color:#FFF59D;">🏠 タイトル画面・問題セット選択へ戻る</button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * Robust 4-channel cross-window communication (works on BOTH file:// and https://)
+         * 1. Direct opener function call
+         * 2. window.opener.postMessage(..., '*')
+         * 3. localStorage 'storage' event bridge
+         * 4. BroadcastChannel
+         */
+        let channel = null;
+        try {
+            if (typeof BroadcastChannel !== 'undefined') {
+                channel = new BroadcastChannel('percent_balloon_sync');
+            }
+        } catch (_) {}
+
+        const el = {
+            connBadge: document.getElementById('conn-badge'),
+            qNum: document.getElementById('ctrl-q-num'),
+            balloons: document.getElementById('ctrl-balloons'),
+            phaseBanner: document.getElementById('ctrl-phase-banner'),
+            respondent: document.getElementById('ctrl-respondent'),
+            questionText: document.getElementById('ctrl-question-text'),
+            btnToggleQ: document.getElementById('ctrl-btn-toggle-q'),
+            qListWrap: document.getElementById('ctrl-q-list-wrap'),
+            qList: document.getElementById('ctrl-q-list'),
+            answer: document.getElementById('ctrl-answer'),
+            correct: document.getElementById('ctrl-correct'),
+            chkAutoPop: document.getElementById('ctrl-chk-auto-pop'),
+            hostSecretVal: document.getElementById('host-secret-val'),
+            btnLockAnswer: document.getElementById('ctrl-btn-lock-answer'),
+            btnReveal: document.getElementById('ctrl-btn-reveal'),
+            btnPop: document.getElementById('ctrl-btn-pop'),
+            btnExplanation: document.getElementById('ctrl-btn-explanation'),
+            btnResult: document.getElementById('ctrl-btn-result'),
+            btnNext: document.getElementById('ctrl-btn-next'),
+            btnUndo: document.getElementById('ctrl-btn-undo'),
+            btnMute: document.getElementById('ctrl-btn-mute'),
+            btnSetup: document.getElementById('ctrl-btn-setup'),
+            btnHomeTop: document.getElementById('ctrl-btn-home-top')
+        };
+
+        let isTypingText = false;
+        let cmdSeq = 0;
+
+        function normalizeDigits(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+                .replace(/[^0-9]/g, '');
+        }
+
+        function sendCmd(action, payload = {}) {
+            const cmdId = `cmd_${Date.now()}_${++cmdSeq}_${Math.random().toString(36).slice(2, 6)}`;
+            const packet = { type: 'PB_CMD', action, payload, cmdId, ts: Date.now() };
+
+            // 1. Direct opener call
+            if (window.opener && !window.opener.closed) {
+                try {
+                    if (typeof window.opener.receiveControllerCommand === 'function') {
+                        window.opener.receiveControllerCommand(action, payload, cmdId);
+                    }
+                } catch (_) {}
+                // 2. window.opener.postMessage (works across file:// origins!)
+                try {
+                    window.opener.postMessage(packet, '*');
+                } catch (_) {}
+            }
+
+            // 3. localStorage event bridge
+            try {
+                localStorage.setItem('pb_cmd_bridge', JSON.stringify(packet));
+            } catch (_) {}
+
+            // 4. BroadcastChannel
+            if (channel) {
+                try {
+                    channel.postMessage({ type: 'CMD', action, payload, cmdId });
+                } catch (_) {}
+            }
+        }
+
+        // Sync inputs to display
+        el.respondent.addEventListener('input', () => {
+            sendCmd('UPDATE_TEXT', {
+                respondent: el.respondent.value,
+                questionText: el.questionText.value
+            });
+        });
+
+        el.questionText.addEventListener('focus', () => { isTypingText = true; });
+        el.questionText.addEventListener('blur', () => { isTypingText = false; });
+        el.questionText.addEventListener('input', () => {
+            sendCmd('UPDATE_TEXT', {
+                respondent: el.respondent.value,
+                questionText: el.questionText.value
+            });
+        });
+
+        el.btnToggleQ.addEventListener('click', () => {
+            sendCmd('TOGGLE_QUESTION_BANNER');
+        });
+
+        el.btnLockAnswer.addEventListener('click', () => {
+            const cleanAns = normalizeDigits(el.answer.value);
+            el.answer.value = cleanAns;
+            sendCmd('LOCK_ANSWER', {
+                answer: cleanAns,
+                respondent: el.respondent.value,
+                questionText: el.questionText.value
+            });
+        });
+
+        el.answer.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                el.btnLockAnswer.click();
+                el.correct.focus();
+            }
+        });
+
+        el.btnReveal.addEventListener('click', () => {
+            const cleanCorr = normalizeDigits(el.correct.value);
+            if (cleanCorr !== '') el.correct.value = cleanCorr;
+            sendCmd('REVEAL_CORRECT', {
+                correct: cleanCorr,
+                autoPop: el.chkAutoPop ? el.chkAutoPop.checked : true
+            });
+        });
+
+        el.correct.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (!el.btnReveal.disabled) {
+                    el.btnReveal.click();
+                } else if (!el.btnPop.disabled) {
+                    el.btnPop.click();
+                }
+            }
+        });
+
+        el.btnPop.addEventListener('click', () => {
+            sendCmd('POP_BALLOONS');
+        });
+
+        el.btnExplanation.addEventListener('click', () => {
+            sendCmd('TOGGLE_EXPLANATION');
+        });
+
+        el.btnResult.addEventListener('click', () => {
+            sendCmd('TOGGLE_RESULT_MODAL');
+        });
+
+        el.btnNext.addEventListener('click', () => {
+            sendCmd('NEXT_QUESTION');
+        });
+
+        el.btnUndo.addEventListener('click', () => {
+            sendCmd('UNDO');
+        });
+
+        el.btnMute.addEventListener('click', () => {
+            sendCmd('TOGGLE_MUTE');
+        });
+
+        el.btnSetup.addEventListener('click', () => {
+            sendCmd('OPEN_SETUP');
+        });
+
+        el.btnHomeTop.addEventListener('click', () => {
+            sendCmd('OPEN_SETUP');
+        });
+
+        function applyStateFromDisplay(st) {
+            if (!st) return;
+            el.qNum.textContent = `${st.currentQuestion} / ${st.totalQuestions}`;
+            el.balloons.textContent = st.remainingBalloons;
+
+            const phaseLabels = {
+                SETUP: '⚙️ 投影画面で初期設定・問題セットを選択してください',
+                INPUT_ANSWER: `Q.${st.currentQuestion}: ① 回答者の予想(%)を入力して「回答を表示」を押してください`,
+                ANSWER_LOCKED: `Q.${st.currentQuestion}: ② 正解の数値(%)を確認して「正解を発表！」を押してください`,
+                CORRECT_REVEALED: `Q.${st.currentQuestion}: ③ 「手動で割る」を押すと差分の風船が割れます！`,
+                POPPING: '🎈 バルーン破裂演出中...',
+                QUESTION_DONE: `Q.${st.currentQuestion} 完了！「次の問題へ進む」を押してください`,
+                GAME_OVER: '💥 GAME OVER（直前に戻す場合はUndoを押してください）',
+                GAME_CLEAR: '🎉 GAME CLEAR!!（直前に戻す場合はUndoを押してください）'
+            };
+            el.phaseBanner.textContent = phaseLabels[st.phase] || '';
+
+            if (!isTypingText && document.activeElement !== el.questionText) {
+                el.questionText.value = st.currentQuestionText || '';
+            }
+            if (document.activeElement !== el.respondent) {
+                el.respondent.value = st.currentRespondent || '';
+            }
+            if (document.activeElement !== el.answer && st.currentAnswer !== null) {
+                el.answer.value = st.currentAnswer;
+            } else if (st.phase === 'INPUT_ANSWER' && st.currentAnswer === null && document.activeElement !== el.answer) {
+                el.answer.value = '';
+            }
+
+            if (st.presetCorrect !== null && st.presetCorrect !== undefined) {
+                el.hostSecretVal.textContent = `${st.presetCorrect}% （自動セット済）`;
+                if (document.activeElement !== el.correct && (el.correct.value === '' || st.phase === 'INPUT_ANSWER')) {
+                    el.correct.value = st.presetCorrect;
+                }
+            } else {
+                el.hostSecretVal.textContent = '手入力モード';
+                if (st.phase === 'INPUT_ANSWER' && st.currentCorrect === null && document.activeElement !== el.correct) {
+                    el.correct.value = '';
+                }
+            }
+
+            if (st.questionBank && st.questionBank.length > 0) {
+                el.qListWrap.classList.remove('hidden');
+                el.qList.innerHTML = '';
+                st.questionBank.forEach((item, idx) => {
+                    const div = document.createElement('div');
+                    div.className = 'q-item' + (idx + 1 === st.currentQuestion ? ' current' : '');
+                    div.innerHTML = `<span><strong>Q.${idx + 1}</strong> ${item.question}</span><span style="color:#FFD700;font-weight:900;">正解: ${item.answer}%</span>`;
+                    div.addEventListener('click', () => {
+                        sendCmd('SELECT_QUESTION_INDEX', { index: idx });
+                    });
+                    el.qList.appendChild(div);
+                });
+            } else {
+                el.qListWrap.classList.add('hidden');
+            }
+
+            const p = st.phase;
+            el.btnLockAnswer.disabled = (p === 'POPPING' || p === 'QUESTION_DONE' || p === 'GAME_OVER' || p === 'GAME_CLEAR');
+            el.btnReveal.disabled = (p !== 'ANSWER_LOCKED' && p !== 'CORRECT_REVEALED');
+            el.btnPop.disabled = (p !== 'CORRECT_REVEALED');
+            el.btnNext.classList.toggle('hidden', p !== 'QUESTION_DONE');
+
+            const canShowExp = st.hasExplanation && (p === 'CORRECT_REVEALED' || p === 'POPPING' || p === 'QUESTION_DONE' || p === 'GAME_OVER' || p === 'GAME_CLEAR');
+            el.btnExplanation.classList.toggle('hidden', !canShowExp);
+            if (canShowExp) {
+                el.btnExplanation.textContent = st.explanationVisible ? '💡 解説を隠す' : '💡 解説を見る';
+            }
+
+            const isGameEnd = (p === 'GAME_OVER' || p === 'GAME_CLEAR');
+            el.btnResult.classList.toggle('hidden', !isGameEnd);
+            if (isGameEnd) {
+                el.btnResult.textContent = st.resultModalVisible ? '🏆 結果画面を隠す（問題・解説を見る）' : '🏆 結果画面を表示';
+            }
+
+            el.btnUndo.disabled = !st.canUndo;
+            el.btnMute.textContent = st.muted ? '🔇 ミュート中' : '🔊 効果音 ON';
+        }
+
+        // Listen on all 4 channels for state updates from Display
+        window.receiveDisplayState = applyStateFromDisplay;
+
+        window.addEventListener('message', (ev) => {
+            if (ev.data && ev.data.type === 'PB_STATE_SYNC') {
+                applyStateFromDisplay(ev.data.state);
+            }
+        });
+
+        window.addEventListener('storage', (ev) => {
+            if (ev.key === 'pb_state_bridge' && ev.newValue) {
+                try {
+                    const data = JSON.parse(ev.newValue);
+                    if (data && data.state) applyStateFromDisplay(data.state);
+                } catch (_) {}
+            }
+        });
+
+        if (channel) {
+            channel.onmessage = (ev) => {
+                if (ev.data && ev.data.type === 'STATE_SYNC') {
+                    applyStateFromDisplay(ev.data.state);
+                }
+            };
+        }
+
+        // Also read latest snapshot from localStorage immediately on startup
+        try {
+            const cached = localStorage.getItem('pb_state_bridge');
+            if (cached) {
+                const parsed = JSON.parse(cached);
+                if (parsed && parsed.state) applyStateFromDisplay(parsed.state);
+            }
+        } catch (_) {}
+
+        sendCmd('REQUEST_STATE');
+    </script>
+</body>
+</html>
